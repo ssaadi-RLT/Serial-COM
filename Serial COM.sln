@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serial COM", "Serial COM\Se
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Megamind.IO.Serial", "..\Megamind.IO.Serial\Megamind.IO.Serial.csproj", "{C75F902F-064B-4E8C-BC94-20130EA01A34}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Serial COM Setup", "Serial COM Setup\Serial COM Setup.vdproj", "{4554D140-9565-448F-A44C-35A1840E0A58}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,8 @@ Global
 		{C75F902F-064B-4E8C-BC94-20130EA01A34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C75F902F-064B-4E8C-BC94-20130EA01A34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C75F902F-064B-4E8C-BC94-20130EA01A34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4554D140-9565-448F-A44C-35A1840E0A58}.Debug|Any CPU.ActiveCfg = Debug
+		{4554D140-9565-448F-A44C-35A1840E0A58}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
