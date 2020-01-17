@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29519.181
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serial COM", "Serial COM\Serial COM.csproj", "{B1883D63-38A0-4427-9BA0-476E0D4A74A9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Megamind.IO.Serial", "..\Megamind.IO.Serial\Megamind.IO.Serial.csproj", "{C75F902F-064B-4E8C-BC94-20130EA01A34}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B1883D63-38A0-4427-9BA0-476E0D4A74A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1883D63-38A0-4427-9BA0-476E0D4A74A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1883D63-38A0-4427-9BA0-476E0D4A74A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1883D63-38A0-4427-9BA0-476E0D4A74A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C75F902F-064B-4E8C-BC94-20130EA01A34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C75F902F-064B-4E8C-BC94-20130EA01A34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C75F902F-064B-4E8C-BC94-20130EA01A34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C75F902F-064B-4E8C-BC94-20130EA01A34}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E53E604E-DF59-42A4-99CC-58A8F34CD209}
+	EndGlobalSection
+EndGlobal
