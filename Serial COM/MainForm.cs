@@ -730,6 +730,11 @@ namespace Serial_COM
 
                 for (int arrayPos = 0; arrayPos < inputArray.Length;)
                 {
+                    if(Global.Lock == true)
+                    {                        
+                        continue;                        
+                    }
+
                     txstr = inputArray[arrayPos]; //arrayPos-th command
 
                     if (string.IsNullOrEmpty(txstr))
@@ -912,6 +917,13 @@ namespace Serial_COM
 
         #endregion
 
+        #region Global
+        public static class Global
+        {
+            public static bool Lock = false;
+        }
+        #endregion
+
         #region Date Received
 
         DateTime _lastRxTsTime = DateTime.Now;
@@ -921,6 +933,8 @@ namespace Serial_COM
         {
             try
             {
+                Global.Lock = true; //Acquire lock
+
                 var now = DateTime.Now;
                 if (_appendTsOnRx && (now.Subtract(_lastRxTsTime) > _appendTsOnRxInterval))
                 {
@@ -947,9 +961,11 @@ namespace Serial_COM
                     rxstr = Encoding.ASCII.GetString(e.Data);                    
                 }
                 AppendEventLog(rxstr, Color.Blue, false);
+                Global.Lock = false; //Release lock
             }
             catch (Exception ex)
             {
+                Global.Lock = false; //Release lock
                 PopupException(ex.Message);
             }
         }
