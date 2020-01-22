@@ -11,6 +11,9 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Megamind.IO.Serial;
 
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace Serial_COM
 {
     public partial class MainForm : Form
@@ -702,6 +705,121 @@ namespace Serial_COM
             }
         }
 
+        /*multithreaded control enable disable*/
+        public delegate void InvokeDelegate();
+        public void EnableDisableControls()
+        {        
+            if (buttonSend.Enabled == true) buttonSend.Enabled = false;
+            else buttonSend.Enabled = true;
+
+            if (richTextBoxTxData.Enabled == true) richTextBoxTxData.Enabled = false;
+            else richTextBoxTxData.Enabled = true;
+
+            if (buttonConnect.Enabled == true) buttonConnect.Enabled = false;
+            else buttonConnect.Enabled = true;            
+        }
+
+        public void multiInputProcess(String[] inputArray)
+        {
+            try
+            {
+                var txstr = "";
+
+                /*Disable buttons and input box until operation is completed*/
+                buttonSend.BeginInvoke(new InvokeDelegate(EnableDisableControls));
+
+                for (int arrayPos = 0; arrayPos < inputArray.Length;)
+                {
+                    txstr = inputArray[arrayPos]; //arrayPos-th command
+
+                    if (string.IsNullOrEmpty(txstr))
+                    {
+                        arrayPos++;
+                        continue;
+                    };
+
+                    //replace windows default newline char \n with \r                    
+                    txstr = txstr.Replace("\r\n", "\n");
+                    txstr = txstr.Replace('\n', '\r');
+                    txstr = txstr.Replace("\r", "");
+
+                    _lastSendIndex = _sendHistory.Count;
+                    var idx = _sendHistory.IndexOf(txstr);
+                    if (idx >= 0) //already exist in history
+                        _sendHistory.RemoveAt(idx);
+                    _sendHistory.Add(txstr);
+
+                    if (_appendTsOnTx)
+                    {
+                        var txts = string.Format("\r[{0:HH:mm:ss.fff}] --> ", DateTime.Now);
+                        AppendEventLog(txts, Color.DarkOliveGreen, false);
+                    }
+                    else
+                    {
+                        AppendEventLog("\r", Color.DarkOliveGreen, false); //for richtextbox newline
+                    }
+
+                    var txbytes = new List<byte>();
+                    if (_txEncode == EncodeType.Auto)
+                    {
+                        if (txstr.StartsWith("0x"))
+                        {
+                            txstr = txstr.Substring(2);
+                            txbytes.AddRange(HexStringToByteArray(txstr));
+                            if (_appendCrOnTx) txbytes.Add((byte)'\r');
+                            if (_appendNlOnTx) txbytes.Add((byte)'\n');
+                            _serialCom.Write(txbytes.ToArray());
+                        }
+                        else
+                        {
+                            if (_appendCrOnTx) txstr += "\r";
+                            if (_appendNlOnTx) txstr += "\n";
+                            _serialCom.Write(txstr);
+                            txbytes.AddRange(Encoding.ASCII.GetBytes(txstr));
+                        }
+                        AppendEventLog(ByteArrayToFormatedString(txbytes.ToArray()), Color.DarkGreen, false);
+                    }
+                    else if (_txEncode == EncodeType.Hex)
+                    {
+                        if (txstr.StartsWith("0x")) txstr = txstr.Substring(2);
+                        txbytes.AddRange(HexStringToByteArray(txstr));
+                        if (_appendCrOnTx) txbytes.Add((byte)'\r');
+                        if (_appendNlOnTx) txbytes.Add((byte)'\n');
+                        _serialCom.Write(txbytes.ToArray());
+                        AppendEventLog(ByteArrayToHexString(txbytes.ToArray()), Color.DarkGreen, false);
+                    }
+                    else //ascii
+                    {
+                        if (_appendCrOnTx) txstr += "\r";
+                        if (_appendNlOnTx) txstr += "\n";
+                        _serialCom.Write(txstr);
+                        AppendEventLog(txstr, Color.DarkGreen, false);
+                    }                    
+                    arrayPos++;
+
+                    /*Hardcoded condition specifically for Sugarloaf*/
+                    if (inputArray.Length > 1)
+                        if (txstr.Contains("FC") || txstr.Contains("83"))
+                        {
+                            Thread.Sleep(12000);
+                        }
+                        else
+                        {
+                            Thread.Sleep(4000);
+                        }
+
+                }//end of for loop
+                /*Enable buttons and input box once operation is completed*/
+                buttonSend.BeginInvoke(new InvokeDelegate(EnableDisableControls));
+            }
+            catch (Exception ex)
+            {
+                /*Enable buttons and input box once operation is completed*/
+                buttonSend.BeginInvoke(new InvokeDelegate(EnableDisableControls));
+                PopupException(ex.Message);
+            }
+        }
+
         private void ButtonSend_Click(object sender, EventArgs e)
         {
             try
@@ -709,11 +827,28 @@ namespace Serial_COM
                 if (!_isConnected) throw new Exception("Please Connect First!");
 
                 var txstr = richTextBoxTxData.Text;
+                /*Take multiple line input*/
+                String[] spearator = {"\n"};
+                var commandArray = txstr.Split(spearator, StringSplitOptions.None);
+                /*------------------------*/
+                
+                /*If a command list is provided, then execute on another theread that does not block UI*/
+                if (commandArray.Length > 1)
+                {
+                    Thread multiInput_T = new Thread(() => multiInputProcess(commandArray));                    
+                    multiInput_T.Start();
+                    richTextBoxTxData.Focus();                    
+                    return;
+                }
+                else
+                    txstr = commandArray[0]; //arrayPos-th command
+
                 if (string.IsNullOrEmpty(txstr)) return;
 
-                //replace windows default newline char \n with \r
+                //replace windows default newline char \n with \r                    
                 txstr = txstr.Replace("\r\n", "\n");
                 txstr = txstr.Replace('\n', '\r');
+                txstr = txstr.Replace("\r", "");
 
                 _lastSendIndex = _sendHistory.Count;
                 var idx = _sendHistory.IndexOf(txstr);
@@ -767,8 +902,7 @@ namespace Serial_COM
                     _serialCom.Write(txstr);
                     AppendEventLog(txstr, Color.DarkGreen, false);
                 }
-
-                richTextBoxTxData.Focus();
+                richTextBoxTxData.Focus();                                                               
             }
             catch (Exception ex)
             {
@@ -802,15 +936,15 @@ namespace Serial_COM
                 var rxstr = "";
                 if (_rxDecode == EncodeType.Auto)
                 {
-                    rxstr = ByteArrayToFormatedString(e.Data);
+                    rxstr = ByteArrayToFormatedString(e.Data);                    
                 }
                 else if (_rxDecode == EncodeType.Hex)
                 {
-                    rxstr = ByteArrayToHexString(e.Data);
+                    rxstr = ByteArrayToHexString(e.Data);                    
                 }
                 else //ascii
                 {
-                    rxstr = Encoding.ASCII.GetString(e.Data);
+                    rxstr = Encoding.ASCII.GetString(e.Data);                    
                 }
                 AppendEventLog(rxstr, Color.Blue, false);
             }
@@ -827,5 +961,9 @@ namespace Serial_COM
 
         #endregion
 
+        private void richTextBoxExEventLog_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }
